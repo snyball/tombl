@@ -21,7 +21,7 @@ $ pg_dumpall -h "${DB[host]}" -p "${DB[port]}" -u "${DB[user]}" > out.sql
 Bash is unable to store nested arrays of any kind, so any nesting will be
 ignored when exporting, and you'll have to adapt your `-e VAR=path.to.thing` to
 access the nested information. It is recommended that you start your scripts with
-`set -euo pipefail`
+`set -euo pipefail` in order to fail fast™.
 
 ```bash
 $ set -euo pipefail
