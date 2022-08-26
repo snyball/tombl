@@ -1,5 +1,7 @@
 use core::fmt;
 use std::{io::{Read, BufReader, self, Write}, fs::File, process, str::FromStr, borrow::Cow, fmt::Display};
+use toml::Value;
+use shell_escape::escape as sh_escape;
 
 use clap::Parser;
 
@@ -39,7 +41,7 @@ impl FromStr for ExportSpec {
     }
 }
 
-fn get_path<'a, S>(mut obj: &'a toml::Value, path: &[S]) -> Result<&'a toml::Value, Error>
+fn get_path<'a, S>(mut obj: &'a Value, path: &[S]) -> Result<&'a Value, Error>
     where S: AsRef<str>
 {
     for part in path.iter() {
@@ -52,23 +54,18 @@ fn get_path<'a, S>(mut obj: &'a toml::Value, path: &[S]) -> Result<&'a toml::Val
     Ok(obj)
 }
 
-fn is_atomic(obj: &toml::Value) -> bool {
-    use toml::Value::*;
+fn is_atomic(obj: &Value) -> bool {
+    use Value::*;
     matches!(obj, String(_) | Boolean(_) | Integer(_) | Datetime(_) | Float(_))
 }
 
-fn write_atom(f: &mut fmt::Formatter<'_>, obj: &toml::Value) -> fmt::Result {
+fn write_atom(f: &mut fmt::Formatter<'_>, obj: &Value) -> fmt::Result {
     match obj {
-        toml::Value::String(s) =>
-            write!(f, r#""{}""#, shell_escape::escape(Cow::from(s)))?,
-        toml::Value::Integer(i) =>
-            write!(f, "{i}")?,
-        toml::Value::Boolean(b) =>
-            write!(f, "{b}")?,
-        toml::Value::Float(fl) =>
-            write!(f, "{fl}")?,
-        toml::Value::Datetime(dt) =>
-            write!(f, "{dt}")?,
+        Value::String(s) => write!(f, r#""{}""#, sh_escape(Cow::from(s)))?,
+        Value::Integer(i) => write!(f, "{i}")?,
+        Value::Boolean(b) => write!(f, "{b}")?,
+        Value::Float(fl) => write!(f, "{fl}")?,
+        Value::Datetime(dt) => write!(f, "{dt}")?,
         _ => unreachable!(),
     }
     Ok(())
@@ -83,7 +80,7 @@ impl<'a> Display for FmtBash<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = &self.as_var;
         match self.value {
-            toml::Value::Array(arr) => {
+            Value::Array(arr) => {
                 write!(f, "declare -a {name}=(")?;
                 let mut had_one = false;
                 for elem in arr.iter() {
@@ -99,7 +96,7 @@ impl<'a> Display for FmtBash<'a> {
                 }
                 writeln!(f, ")")?;
             }
-            toml::Value::Table(tbl) => {
+            Value::Table(tbl) => {
                 write!(f, "declare -A {name}=(")?;
                 let mut had_one = false;
                 for (key, value) in tbl.iter() {
@@ -111,12 +108,12 @@ impl<'a> Display for FmtBash<'a> {
                         had_one = true;
                     }
 
-                    write!(f, r#"["{}"]="#, shell_escape::escape(Cow::from(key)))?;
+                    write!(f, r#"["{}"]="#, sh_escape(Cow::from(key)))?;
                     write_atom(f, value)?;
                 }
                 writeln!(f, ")")?;
             }
-            toml::Value::Integer(i) => writeln!(f, r#"declare -i {name}={i}"#)?,
+            Value::Integer(i) => writeln!(f, r#"declare -i {name}={i}"#)?,
             x => {
                 write!(f, r#"declare {name}="#)?;
                 write_atom(f, x)?;
@@ -127,16 +124,17 @@ impl<'a> Display for FmtBash<'a> {
 }
 
 fn doit(opts: Opts) -> Result<(), Box<dyn std::error::Error>> {
-    let mut input_file = BufReader::new(opts.input.map(|f| -> Result<Box<dyn Read>, io::Error> {
-        Ok(Box::new(File::open(f)?))
-    }).unwrap_or_else(|| Ok(Box::new(io::stdin())))?);
+    let mut input_file = BufReader::new(
+        opts.input.map(|f| -> Result<Box<dyn Read>, io::Error> {
+            Ok(Box::new(File::open(f)?))
+        }).unwrap_or_else(|| Ok(Box::new(io::stdin())))?);
     let mut input = String::new();
     input_file.read_to_string(&mut input)?;
     let obj: toml::Value = toml::from_str(&input)?;
     for export in opts.exports.iter() {
         let ExportSpec { as_var, path } = export.parse()?;
         let value = get_path(&obj, &path)?;
-        println!("{}", FmtBash { as_var, value })
+        print!("{}", FmtBash { as_var, value })
     }
     Ok(())
 }
