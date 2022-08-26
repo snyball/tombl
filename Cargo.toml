@@ -2,6 +2,11 @@
 name = "tombl"
 version = "0.2.2"
 edition = "2021"
+license = "GPL-3.0-only"
+description = "Interopability between bash and the TOML serialization format"
+homepage = "https://github.com/snyball/tombl"
+repository = "https://github.com/snyball/tombl"
+authors = ["Jonas Møller <jonas@moesys.no>"]
 
 [profile.release]
 panic = "abort"
