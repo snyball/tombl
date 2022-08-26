@@ -1,0 +1,24 @@
+USAGE:
+    tombl [OPTIONS] [INPUT]
+
+ARGS:
+    <INPUT>
+
+OPTIONS:
+    -e, --export <EXPORTS>    Export variable
+    -h, --help                Print help information
+    -V, --version             Print version information
+
+EXAMPLES:
+    $ cat Cargo.toml
+    [profile.target]
+    lto = true
+    debug = 1
+    $ eval "$(tombl -e lto=profile.target.lto Cargo.toml)"
+    $ echo "$lto"
+    true
+    $ eval "$(tombl -e target=profile.target Cargo.toml)"
+    $ echo "${target[lto]}"
+    true
+    $ echo "${target[debug]}"
+    1
