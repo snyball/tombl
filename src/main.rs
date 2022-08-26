@@ -1,16 +1,11 @@
 use core::fmt;
-use std::{io::{Read, BufReader, self}, fs::File, process, str::FromStr, borrow::Cow, fmt::Display};
+use std::{io::{Read, BufReader, self}, fs::File, process, str::FromStr, borrow::Cow, fmt::Display, env};
 use toml::Value;
 use shell_escape::escape as sh_escape;
-use clap::Parser;
 
-#[derive(Parser, Debug)]
-#[clap(author, version)]
+#[derive(Debug)]
 struct Opts {
-    #[clap(short = 'e', long = "export")]
     exports: Vec<String>,
-    #[clap(short = 's', long = "parse")]
-    parse_as: Vec<String>,
     input: Option<String>,
 }
 
@@ -60,7 +55,7 @@ fn is_atomic(obj: &Value) -> bool {
 
 fn write_atom(f: &mut fmt::Formatter<'_>, obj: &Value) -> fmt::Result {
     match obj {
-        Value::String(s) => write!(f, r#""{}""#, sh_escape(Cow::from(s)))?,
+        Value::String(s) => write!(f, "{}", sh_escape(Cow::from(s)))?,
         Value::Integer(i) => write!(f, "{i}")?,
         Value::Boolean(b) => write!(f, "{b}")?,
         Value::Float(fl) => write!(f, "{fl}")?,
@@ -107,7 +102,7 @@ impl<'a> Display for FmtBash<'a> {
                         had_one = true;
                     }
 
-                    write!(f, r#"["{}"]="#, sh_escape(Cow::from(key)))?;
+                    write!(f, r#"[{}]="#, sh_escape(Cow::from(key)))?;
                     write_atom(f, value)?;
                 }
                 writeln!(f, ")")?;
@@ -139,7 +134,35 @@ fn doit(opts: Opts) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn main() {
-    let opts: Opts = Opts::parse();
+    let mut exports = Vec::new();
+    let mut input = None;
+    let mut is_export = false;
+    let name = env!("CARGO_PKG_NAME");
+    let version = env!("CARGO_PKG_VERSION");
+    for arg in env::args().skip(1) {
+        if arg == "--help" || arg == "-h" {
+            eprintln!("{name} {version}\n");
+            eprintln!("{}", include_str!("../docs/opt-help.txt"));
+            return;
+        }
+        if arg == "--version" || arg == "-V" {
+            eprintln!("{name} {version}");
+            return;
+        }
+        if is_export && !arg.starts_with("-") {
+            exports.push(arg);
+            is_export = false;
+            continue;
+        }
+        is_export = false;
+        if arg == "-e" || arg == "--export" {
+            is_export = true;
+        }
+        if !arg.starts_with("-") {
+            input = Some(arg);
+        }
+    }
+    let opts = Opts { exports, input };
     if let Err(e) = doit(opts) {
         eprintln!("{e}");
         process::exit(1);
