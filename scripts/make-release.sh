@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-if [ -z "$(git status --porcelain=v1 2>/dev/null)" ]; then
+if ! [ -z "$(git status --porcelain=v1 2>/dev/null)" ]; then
     echo "You have unstaged changes."
     exit 1
 fi
