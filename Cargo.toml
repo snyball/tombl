@@ -3,7 +3,7 @@ name = "tombl"
 version = "0.1.1"
 edition = "2021"
 
-[target.release]
+[profile.release]
 panic = "abort"
 lto = "fat"
 
