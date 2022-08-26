@@ -1,8 +1,7 @@
 use core::fmt;
-use std::{io::{Read, BufReader, self, Write}, fs::File, process, str::FromStr, borrow::Cow, fmt::Display};
+use std::{io::{Read, BufReader, self}, fs::File, process, str::FromStr, borrow::Cow, fmt::Display};
 use toml::Value;
 use shell_escape::escape as sh_escape;
-
 use clap::Parser;
 
 #[derive(Parser, Debug)]
