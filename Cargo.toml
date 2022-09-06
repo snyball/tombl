@@ -15,7 +15,6 @@ codegen-units = 1
 opt-level = "s"
 
 [dependencies]
-serde = { version = "1.0.144", features = ["derive"] }
 shell-escape = "0.1.5"
 thiserror = "1.0.32"
-toml = { version = "0.5.9", features = ["indexmap"] }
+toml = "0.5.9"
