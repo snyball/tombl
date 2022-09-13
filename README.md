@@ -4,18 +4,28 @@
 `tombl` makes `bash` viable for DevOps-automations that involve configurations
 saved as `.toml` files.
 
-It allows `bash` to read `.toml` files **structurally**, so you don't have to
-come up with weird ad-hoc solutions involving `awk`, `sed`, and tears as soon as
-it breaks in production because you didn't use an actual toml-parser.
-
 ```bash
-$ set -euo pipefail
-$ tombl -e DB=databases.hmm /etc/my-config.toml
-declare -A DB=(["user"]="postgreker" ["password"]="super secret" ["host"]="0.0.0.0" ["port"]=5432)
 $ eval "$(tombl -e DB=databases.hmm /etc/my-config.toml)"
 $ echo "${DB[user]}"
 postgreker
 $ pg_dumpall -h "${DB[host]}" -p "${DB[port]}" -u "${DB[user]}" > out.sql
+$ eval "$(tombl -e KEYS=backup.gpg_keys /etc/my-config.toml)"
+$ for key in "${KEYS[@]}"; do echo "key: $key"; done
+key: my@self.com
+key: team@work.com
+```
+
+It allows `bash` to read `.toml` files **structurally**, so you don't have to
+come up with weird ad-hoc solutions involving `awk`, `sed`, and tears as soon
+as it breaks in production because you didn't use an actual toml-parser. It
+does this by outputting `declare` statements for associative, and "plain"
+arrays.
+
+```bash
+$ tombl -e DB=databases.hmm /etc/my-config.toml
+declare -A DB=([user]=postgreker [password]='super secret' [host]=0.0.0.0 [port]=5432)
+$ tombl -e GPG_KEYS=backup.gpg_keys /etc/my-config.toml declare -a 
+GPG_KEYS=(my@self.com team@work.com)
 ```
 
 Bash is unable to store nested arrays of any kind, so any nesting will be
