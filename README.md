@@ -24,8 +24,12 @@ arrays.
 ```bash
 $ tombl -e DB=databases.hmm /etc/my-config.toml
 declare -A DB=([user]=postgreker [password]='super secret' [host]=0.0.0.0 [port]=5432)
-$ tombl -e GPG_KEYS=backup.gpg_keys /etc/my-config.toml declare -a 
-GPG_KEYS=(my@self.com team@work.com)
+$ tombl -e GPG_KEYS=backup.gpg_keys /etc/my-config.toml
+declare -a GPG_KEYS=(my@self.com team@work.com)
+$ tombl -e VAR=some.number /etc/my-config.toml
+declare -i VAR=123
+$ tombl -e VAR=some.thing /etc/my-config.toml
+declare VAR='a thing of sorts'
 ```
 
 Bash is unable to store nested arrays of any kind, so any nesting will be
