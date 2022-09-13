@@ -62,6 +62,7 @@ $ echo "${DB[thing-that-is-nested]}" # whoops, but this will fail fast because o
 bash: l: unbound variable
 ```
 
-The tombl binary is `184K`, and the release build is created with the help of
-itself in
+The tombl binary is `184K` statically linked, and the release build is created
+with the help of itself in
 [`make-release.sh`](https://github.com/snyball/tombl/blob/7cee1ec8de4ae2270ecdc327c7320994c97c9698/scripts/make-release.sh#L22).
+Builds are available for Linux only, but it should work on any platform Rust supports.
