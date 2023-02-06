@@ -28,4 +28,5 @@ strip "$out/$bin"
 cp LICENSE "$out/"
 cd releases
 tar cfz "$name.tar.gz" "$name"
+sha256sum "$name.tar.gz" > "$name.sha256sum"
 rm -rf "$name"
