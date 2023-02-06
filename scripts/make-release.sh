@@ -25,6 +25,7 @@ out="releases/$name"
 mkdir -p "$out"
 cp "$tombl" "$out/$bin"
 strip "$out/$bin"
+cp LICENSE "$out/"
 cd releases
 tar cfz "$name.tar.gz" "$name"
 rm -rf "$name"
